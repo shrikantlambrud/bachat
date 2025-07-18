@@ -1,0 +1,80 @@
+
+{% extends "base.html" %}
+{% block title %}Manage Settings{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6 max-w-lg">
+    <div class="bg-white shadow-lg rounded-2xl p-8">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-8 text-center">Manage Application Settings</h1>
+
+        <form method="POST" action="{{ url_for('manage_settings') }}" class="space-y-6">
+            <!-- Contribution Amount -->
+            <div>
+                <label for="default_contribution_amount" class="block text-gray-700 text-sm font-semibold mb-1">
+                    Default Monthly Contribution Amount (₹):
+                </label>
+                <input type="number" id="default_contribution_amount" name="default_contribution_amount"
+                    step="0.01" required min="0.01"
+                    value="{{ '%.2f'|format(current_contribution_amount) }}"
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Expected monthly contribution by members.</p>
+            </div>
+
+            <!-- Fine Amount -->
+            <div>
+                <label for="default_fine_amount" class="block text-gray-700 text-sm font-semibold mb-1">
+                    Default Monthly Fine Amount (₹):
+                </label>
+                <input type="number" id="default_fine_amount" name="default_fine_amount"
+                    step="0.01" required min="0"
+                    value="{{ '%.2f'|format(current_fine_amount) }}"
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <p class="text-xs text-gray-500 mt-1">Fine applied if contribution is paid after the 7th.</p>
+            </div>
+
+            <!-- Interest Rate -->
+            <div>
+                <label for="default_interest_rate" class="block text-gray-700 text-sm font-semibold mb-1">
+                    Default Loan Interest Rate (% per annum):
+                </label>
+                <input type="number" id="default_interest_rate" name="default_interest_rate"
+                    step="0.01" required min="0.01" max="100"
+                    value="{{ '%.2f'|format(current_interest_rate) }}"
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <p class="text-xs text-gray-500 mt-1">Pre-filled in new loan applications; adjustable by admins.</p>
+            </div>
+
+            <!-- New: Payment Start Day -->
+            <div>
+                <label for="payment_start_day" class="block text-gray-700 text-sm font-semibold mb-1">
+                    Contribution Payment Start Day (1-31):
+                </label>
+                <input type="number" id="payment_start_day" name="payment_start_day"
+                    min="1" max="31" required
+                    value="{{ current_payment_start_day }}" {# This value is loaded dynamically from the backend #}
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">The day of the month when contributions can start being paid.</p>
+            </div>
+
+            <!-- New: Payment End Day -->
+            <div>
+                <label for="payment_end_day" class="block text-gray-700 text-sm font-semibold mb-1">
+                    Contribution Payment End Day (1-31):
+                </label>
+                <input type="number" id="payment_end_day" name="payment_end_day"
+                    min="1" max="31" required
+                    value="{{ current_payment_end_day }}" {# This value is loaded dynamically from the backend #}
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">The day of the month by which contributions should be paid to avoid a fine.</p>
+            </div>
+
+            <!-- Submit Button -->
+            <div>
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-semibold py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:from-blue-600 hover:to-indigo-700">
+                    💾 Update Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

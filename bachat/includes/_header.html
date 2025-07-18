@@ -1,0 +1,5 @@
+<header class="main-header">
+    <h1>Welcome, {{ username }}!</h1>
+    <p>Your roles: {% for role in roles %}{{ role }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {# Add other dynamic header content here if needed #}
+</header>

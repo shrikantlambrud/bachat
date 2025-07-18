@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}{{ user_profile.name }}'s Profile{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">{{ user_profile.name }}'s Profile</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Personal Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+            <div><strong>Name:</strong> {{ user_profile.name }}</div>
+            <div><strong>Username:</strong> {{ user_profile.username }}</div>
+            <div><strong>Email:</strong> {{ user_profile.email }}</div>
+            <div><strong>Contact Number:</strong> {{ user_profile.contact_number }}</div>
+            <div><strong>PAN Number:</strong> {{ user_profile.pan_number }}</div>
+            <div><strong>Aadhar Number:</strong> {{ user_profile.aadhar_number }}</div>
+            <div><strong>Role:</strong> {{ user_profile.role.capitalize() }}</div>
+        </div>
+        {% if session.get('role') in ['president', 'secretary'] %}
+        <div class="mt-6 text-center">
+            <a href="{{ url_for('edit_member', member_id=user_profile.id) }}" class="btn-secondary">Edit Member</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Contribution History</h2>
+        {% if contributions %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Month</th>
+                        <th class="py-3 px-6 text-left">Year</th>
+                        <th class="py-3 px-6 text-left">Amount</th>
+                        <th class="py-3 px-6 text-left">Fine Amount</th>
+                        <th class="py-3 px-6 text-left">Total Paid</th>
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-left">Payment Date</th>
+                        <th class="py-3 px-6 text-left">UTR Number (Member)</th>
+                        <th class="py-3 px-6 text-left">UTR Number (President)</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm font-light">
+                    {% for contribution in contributions %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left">{{ datetime.strptime(contribution.month|string, '%m').strftime('%B') }}</td>
+                        <td class="py-3 px-6 text-left">{{ contribution.year }}</td>
+                        <td class="py-3 px-6 text-left">₹{{ "%.2f"|format(contribution.amount) }}</td>
+                        <td class="py-3 px-6 text-left">₹{{ "%.2f"|format(contribution.fine_amount) }}</td>
+                        <td class="py-3 px-6 text-left">₹{{ "%.2f"|format(contribution.amount + contribution.fine_amount) }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if contribution.is_paid %} bg-green-200 text-green-800
+                                {% else %} bg-yellow-200 text-yellow-800
+                                {% endif %}">
+                                {{ 'Paid' if contribution.is_paid else 'Pending' }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">{{ contribution.payment_date.strftime('%Y-%m-%d %H:%M') if contribution.payment_date }}</td>
+                        <td class="py-3 px-6 text-left">{{ contribution.utr_number if contribution.utr_number else 'N/A' }}</td>
+                        <td class="py-3 px-6 text-left">{{ contribution.president_utr_number if contribution.president_utr_number else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-600">No contribution history found.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Loan History</h2>
+        {% if loans %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Loan ID</th>
+                        <th class="py-3 px-6 text-left">Amount</th>
+                        <th class="py-3 px-6 text-left">Interest Rate (%)</th>
+                        <th class="py-3 px-6 text-left">Start Date</th>
+                        <th class="py-3 px-6 text-left">Actual End Date</th> {# Updated #}
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-left">Disbursement Type</th> {# New Column #}
+                        <th class="py-3 px-6 text-left">Disbursement Details</th> {# New Column #}
+                        <th class="py-3 px-6 text-left">Payments</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm font-light">
+                    {% for loan in loans %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.id }}</td>
+                        <td class="py-3 px-6 text-left">₹{{ "%.2f"|format(loan.amount) }}</td>
+                        <td class="py-3 px-6 text-left">{{ "%.2f"|format(loan.interest_rate) }}%</td>
+                        <td class="py-3 px-6 text-left">{{ loan.start_date.strftime('%Y-%m-%d') if loan.start_date }}</td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.actual_end_date %} {# Updated #}
+                                {{ loan.actual_end_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if loan.status == 'pending' %} bg-yellow-200 text-yellow-800
+                                {% elif loan.status == 'approved' %} bg-green-200 text-green-800
+                                {% elif loan.status == 'rejected' %} bg-red-200 text-red-800
+                                {% elif loan.status == 'completed' %} bg-blue-200 text-blue-800
+                                {% elif loan.status == 'overdue' %} bg-orange-200 text-orange-800
+                                {% endif %}">
+                                {{ loan.status.capitalize() }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">{{ loan.disbursement_type.capitalize() if loan.disbursement_type else 'N/A' }}</td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.disbursement_details %}
+                                {% set details = loan.disbursement_details | from_json %}
+                                {% if loan.disbursement_type == 'cash' %}
+                                    ₹500: {{ details.notes_500 | default(0) }}, ₹200: {{ details.notes_200 | default(0) }}, ₹100: {{ details.notes_100 | default(0) }}
+                                {% elif loan.disbursement_type == 'cheque' %}
+                                    Cheque No: {{ details.cheque_number | default('N/A') }}
+                                {% elif loan.disbursement_type == 'upi' %}
+                                    UTR: {{ details.upi_utr | default('N/A') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.payments %}
+                            <ul class="list-disc list-inside text-xs">
+                                {% for payment in loan.payments %}
+                                <li>₹{{ "%.2f"|format(payment.amount_paid) }} (Int: ₹{{ "%.2f"|format(payment.interest_paid) }}) on {{ payment.payment_date.strftime('%Y-%m-%d') }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            No payments yet.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-600">No loan history found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

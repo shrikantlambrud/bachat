@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}My Loans{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">My Loans</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="mb-6 text-center">
+        <a href="{{ url_for('apply_loan') }}" class="btn-primary">Apply for New Loan</a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        {% if loans %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Loan ID</th>
+                        <th class="py-3 px-6 text-left">Amount</th>
+                        <th class="py-3 px-6 text-left">Interest Rate (%)</th>
+                        <th class="py-3 px-6 text-left">Start Date</th>
+                        <th class="py-3 px-6 text-left">Actual End Date</th> {# Updated #}
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-left">Disbursement Type</th> {# New Column #}
+                        <th class="py-3 px-6 text-left">Approved By</th>
+                        <th class="py-3 px-6 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm font-light">
+                    {% for loan in loans %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.id }}</td>
+                        <td class="py-3 px-6 text-left">₹{{ "%.2f"|format(loan.amount) }}</td>
+                        <td class="py-3 px-6 text-left">{{ "%.2f"|format(loan.interest_rate) }}%</td>
+                        <td class="py-3 px-6 text-left">{{ loan.start_date.strftime('%Y-%m-%d') if loan.start_date }}</td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.actual_end_date %} {# Updated #}
+                                {{ loan.actual_end_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if loan.status == 'pending' %} bg-yellow-200 text-yellow-800
+                                {% elif loan.status == 'approved' %} bg-green-200 text-green-800
+                                {% elif loan.status == 'rejected' %} bg-red-200 text-red-800
+                                {% elif loan.status == 'completed' %} bg-blue-200 text-blue-800
+                                {% elif loan.status == 'overdue' %} bg-orange-200 text-orange-800
+                                {% endif %}">
+                                {{ loan.status.capitalize() }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.disbursement_type %}
+                                {{ loan.disbursement_type.capitalize() }}
+                                {% if loan.disbursement_details %}
+                                    <span class="text-gray-500 text-xs block">
+                                        {% set details = loan.disbursement_details | from_json %}
+                                        {% if loan.disbursement_type == 'cash' %}
+                                            (₹500: {{ details.notes_500 | default(0) }}, ₹200: {{ details.notes_200 | default(0) }}, ₹100: {{ details.notes_100 | default(0) }})
+                                        {% elif loan.disbursement_type == 'cheque' %}
+                                            (Cheque No: {{ details.cheque_number | default('N/A') }})
+                                        {% elif loan.disbursement_type == 'upi' %}
+                                            (UTR: {{ details.upi_utr | default('N/A') }})
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-6 text-left">{{ loan.president_name if loan.president_name else 'N/A' }}</td>
+                        <td class="py-3 px-6 text-left">
+                            {% if loan.status == 'approved' or loan.status == 'overdue' %}
+                                <a href="{{ url_for('record_loan_payment', loan_id=loan.id) }}" class="btn-primary text-xs px-2 py-1 mr-1">Record Payment</a>
+                                <a href="{{ url_for('close_loan', loan_id=loan.id) }}" class="btn-secondary text-xs px-2 py-1">Close Loan</a>
+                            {% elif loan.status == 'pending' %}
+                                <span class="text-gray-500">Awaiting Approval</span>
+                            {% else %}
+                                <span class="text-gray-500">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-600">You have no loan applications.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

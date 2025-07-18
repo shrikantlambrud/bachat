@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Generate Reports</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="p-3 rounded-md text-sm font-medium
+                        {% if category == 'success' %} bg-green-100 text-green-800
+                        {% elif category == 'error' %} bg-red-100 text-red-800
+                        {% elif category == 'info' %} bg-blue-100 text-blue-800
+                        {% else %} bg-gray-100 text-gray-800
+                        {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+<div class="bg-white shadow-lg rounded-xl p-6 mb-8 border border-blue-100">
+    <form method="POST" action="{{ url_for('reports') }}" id="report_form">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div>
+                <label for="report_type" class="block text-gray-800 text-sm font-semibold mb-2">Report Type:</label>
+                <select id="report_type" name="report_type" class="w-full px-4 py-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="toggleReportFilters()">
+                    <option value="">Select Report</option>
+                    <option value="monthly_contributions" {% if report_type == 'monthly_contributions' %}selected{% endif %}>Monthly Contributions</option>
+                    <option value="yearly_contributions" {% if report_type == 'yearly_contributions' %}selected{% endif %}>Yearly Contributions</option>
+                    <option value="monthly_loan_interest" {% if report_type == 'monthly_loan_interest' %}selected{% endif %}>Monthly Loan Interest</option>
+                    <option value="yearly_loan_interest" {% if report_type == 'yearly_loan_interest' %}selected{% endif %}>Yearly Loan Interest</option>
+                    <option value="member_contributions" {% if report_type == 'member_contributions' %}selected{% endif %}>Member-wise Contributions</option>
+                    <option value="member_loans" {% if report_type == 'member_loans' %}selected{% endif %}>Member-wise Loans</option>
+                    <option value="all_members_summary" {% if report_type == 'all_members_summary' %}selected{% endif %}>All Members Summary</option>
+                </select>
+            </div>
+
+            <div id="month_filter" class="{% if report_type not in ['monthly_contributions', 'monthly_loan_interest'] %}hidden{% endif %}">
+                <label for="month" class="block text-gray-800 text-sm font-semibold mb-2">Month:</label>
+                <select id="month" name="month" class="w-full px-4 py-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="">Select Month</option>
+                    {% for i in range(1, 13) %}
+                        <option value="{{ '%02d'|format(i) }}" {% if selected_month == '%02d'|format(i) %}selected{% endif %}>
+                            {{ datetime.strptime(i|string, '%m').strftime('%B') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="year_filter" class="{% if report_type not in ['monthly_contributions', 'yearly_contributions', 'monthly_loan_interest', 'yearly_loan_interest'] %}hidden{% endif %}">
+                <label for="year" class="block text-gray-800 text-sm font-semibold mb-2">Year:</label>
+                <select id="year" name="year" class="w-full px-4 py-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="">Select Year</option>
+                    {% for year in all_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="member_filter" class="{% if report_type not in ['member_contributions', 'member_loans'] %}hidden{% endif %}">
+                <label for="member_id" class="block text-gray-800 text-sm font-semibold mb-2">Member:</label>
+                <select id="member_id" name="member_id" class="w-full px-4 py-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="">Select Member</option>
+                    {% for member in all_members %}
+                        <option value="{{ member.id }}" {% if selected_member_id == member.id|string %}selected{% endif %}>{{ member.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-700 transition duration-300 ease-in-out">
+                🎯 Generate Report
+            </button>
+        </div>
+    </form>
+</div>
+
+
+    {% if report_data %}
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">{{ report_title }}</h2>
+
+        <div class="overflow-x-auto mb-6"> {# Added mb-6 for spacing below table #}
+            <table class="min-w-full text-sm text-left text-gray-700">
+                <thead class="bg-gray-200 uppercase text-xs font-semibold text-gray-700">
+                    <tr>
+                        {% for header in report_headers %}
+                            <th class="py-3 px-6">{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data %}
+                        <tr class="border-b hover:bg-gray-50">
+                            {% if report_type == 'monthly_contributions' %}
+                                <td class="py-3 px-6">{{ row.member_name }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.fine_amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_paid) }}</td>
+                                <td class="py-3 px-6">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if row.is_paid %} bg-green-200 text-green-800
+                                        {% else %} bg-yellow-200 text-yellow-800
+                                        {% endif %}">
+                                        {{ 'Paid' if row.is_paid else 'Pending' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-6">{{ row.payment_date.strftime('%Y-%m-%d %H:%M') if row.payment_date }}</td>
+                                <td class="py-3 px-6">{{ row.utr_number or 'N/A' }}</td>
+                                <td class="py-3 px-6">{{ row.president_utr_number or 'N/A' }}</td>
+
+                            {% elif report_type == 'yearly_contributions' %}
+                                <td class="py-3 px-6">{{ row.member_name }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_fine_amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.grand_total) }}</td>
+
+                            {% elif report_type == 'monthly_loan_interest' %}
+                                <td class="py-3 px-6">{{ row.borrower_name }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.loan_amount) }}</td>
+                                <td class="py-3 px-6">{{ "%.2f"|format(row.interest_rate) }}%</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.interest_paid) }}</td>
+                                <td class="py-3 px-6">{{ row.payment_date.strftime('%Y-%m-%d %H:%M') if row.payment_date }}</td>
+
+                            {% elif report_type == 'yearly_loan_interest' %}
+                                <td class="py-3 px-6">{{ row.borrower_name }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_interest_paid_yearly) }}</td>
+
+                            {% elif report_type == 'member_contributions' %}
+                                <td class="py-3 px-6">{{ row.month_name }}</td>
+                                <td class="py-3 px-6">{{ row.year }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.fine_amount) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_paid) }}</td>
+                                <td class="py-3 px-6">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if row.is_paid %} bg-green-200 text-green-800
+                                        {% else %} bg-yellow-200 text-yellow-800
+                                        {% endif %}">
+                                        {{ 'Paid' if row.is_paid else 'Pending' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-6">{{ row.payment_date.strftime('%Y-%m-%d %H:%M') if row.payment_date }}</td>
+
+                            {% elif report_type == 'member_loans' %}
+                                <td class="py-3 px-6">{{ row.id }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.amount) }}</td>
+                                <td class="py-3 px-6">{{ "%.2f"|format(row.interest_rate) }}%</td>
+                                <td class="py-3 px-6">{{ row.start_date.strftime('%Y-%m-%d') if row.start_date }}</td>
+                                <td class="py-3 px-6">{{ row.actual_end_date.strftime('%Y-%m-%d') if row.actual_end_date else 'N/A' }}</td>
+                                <td class="py-3 px-6">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if row.status == 'pending' %} bg-yellow-200 text-yellow-800
+                                        {% elif row.status == 'approved' %} bg-green-200 text-green-800
+                                        {% elif row.status == 'rejected' %} bg-red-200 text-red-800
+                                        {% elif row.status == 'completed' %} bg-blue-200 text-blue-800
+                                        {% endif %}">
+                                        {{ row.status.title() }}
+                                    </span>
+                                </td>
+
+                            {% elif report_type == 'all_members_summary' %}
+                                <td class="py-3 px-6">{{ row.member_name }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_contributions) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_loans) }}</td>
+                                <td class="py-3 px-6">₹{{ "%.2f"|format(row.total_interest_paid) }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Export Buttons Section #}
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mt-6">
+            {% if excel_export_available %}
+                <a href="{{ url_for('export_report', format='excel',
+                           report_type=report_type,
+                           month=selected_month if selected_month else '',
+                           year=selected_year if selected_year else '',
+                           member_id=selected_member_id if selected_member_id else '') }}"
+                   class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 text-center flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Export to Excel
+                </a>
+            {% endif %}
+
+            {% if pdf_export_available %}
+                <a href="{{ url_for('export_report', format='pdf',
+                           report_type=report_type,
+                           month=selected_month if selected_month else '',
+                           year=selected_year if selected_year else '',
+                           member_id=selected_member_id if selected_member_id else '') }}"
+                   class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 text-center flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Export to PDF
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function toggleReportFilters() {
+        const reportType = document.getElementById("report_type").value;
+        document.getElementById("month_filter").classList.toggle("hidden", !['monthly_contributions', 'monthly_loan_interest'].includes(reportType));
+        document.getElementById("year_filter").classList.toggle("hidden", !['monthly_contributions', 'yearly_contributions', 'monthly_loan_interest', 'yearly_loan_interest'].includes(reportType));
+        document.getElementById("member_filter").classList.toggle("hidden", !['member_contributions', 'member_loans'].includes(reportType));
+    }
+
+    document.addEventListener("DOMContentLoaded", toggleReportFilters);
+</script>
+{% endblock %}

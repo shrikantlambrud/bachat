@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}President Dashboard{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">Main Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="card text-center bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <h3 class="text-2xl font-semibold mb-2">Total Members</h3>
+            <p class="text-5xl font-bold">{{ total_members }}</p>
+        </div>
+        <div class="card text-center bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <h3 class="text-2xl font-semibold mb-2">Bank Balance</h3>
+            <p class="text-5xl font-bold">₹{{ "%.2f"|format(bank_balance) }}</p>
+        </div>
+        <div class="card text-center bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <h3 class="text-2xl font-semibold mb-2">Approved Loans</h3>
+            <p class="text-5xl font-bold">{{ total_loans }}</p>
+        </div>
+        <div class="card text-center bg-gradient-to-br from-yellow-500 to-yellow-600 text-white md:col-span-2 lg:col-span-1">
+            <h3 class="text-2xl font-semibold mb-2">Contributions (This Month)</h3>
+            <p class="text-5xl font-bold">₹{{ "%.2f"|format(total_contributions_this_month) }}</p>
+        </div>
+         <div class="card text-center bg-gradient-to-br from-blue-500 to-blue-600 text-white md:col-span-2 lg:col-span-1">
+            <h3 class="text-2xl font-semibold mb-2">Interest (This Month)</h3>
+            <p class="text-5xl font-bold">₹{{ "%.2f"|format(total_interest_this_month) }}</p>
+        </div>
+         <div class="card text-center bg-gradient-to-br from-yellow-500 to-green-600 text-white md:col-span-2 lg:col-span-1">
+            <h3 class="text-2xl font-semibold mb-2">Total Income (This Month)</h3>
+            <p class="text-5xl font-bold">₹{{ "%.2f"|format(total_income_this_month) }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">🚀 Quick Actions</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="{{ url_for('add_member') }}"
+               class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                ➕ Add New Member
+            </a>
+
+            <a href="{{ url_for('manage_members') }}"
+               class="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                👥 Manage Members
+            </a>
+
+            <a href="{{ url_for('bank_balance') }}"
+               class="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                💰 Manage Bank Balance
+            </a>
+
+            <a href="{{ url_for('loans') }}"
+               class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                🧾 Manage Loans
+            </a>
+
+            <a href="{{ url_for('contributions') }}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                💸 Make My Contribution
+            </a>
+
+            <a href="{{ url_for('manage_contributions') }}"
+               class="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                💸 Manage Contributions
+            </a>
+
+            <a href="{{ url_for('manage_settings') }}"
+               class="flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                Manage Settings
+            </a>
+
+            <a href="{{ url_for('loans') }}"
+               class="flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                💵 My Loans
+            </a>
+
+            <a href="{{ url_for('member_profile', user_id=session.get('user_id')) }}"
+               class="flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                👤 My Profile
+            </a>
+
+            <a href="{{ url_for('reports') }}"
+               class="flex items-center justify-center gap-2 bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                📊 Generate Reports
+            </a>
+
+            <form action="{{ url_for('send_reminders') }}" method="POST" class="col-span-full">
+                <button type="submit"
+                        class="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                    📩 Send Reminders (SMS/Email)
+                </button>
+                <p class="text-sm text-gray-600 mt-2 text-center">
+                    Note: This is a simulated action. In a real app, it would integrate with SMS/Email APIs.
+                </p>
+            </form>
+        </div>
+    </div>
+
+
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Recent Activities</h2>
+            {% if recent_activities %}
+            <ul class="space-y-3">
+                {% for activity in recent_activities %}
+                <li class="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                    <div>
+                        <span class="font-semibold text-gray-800">{{ activity.member_name }}</span>
+                        {% if activity.type == 'contribution' %}
+                            <span class="text-gray-600"> paid contribution of </span>
+                            <span class="font-bold text-green-600">₹{{ "%.2f"|format(activity.amount) }}</span>
+                        {% elif activity.type == 'loan' %}
+                            <span class="text-gray-600"> took a loan of </span>
+                            <span class="font-bold text-red-600">₹{{ "%.2f"|format(activity.amount) }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-sm text-gray-500">{{ activity.payment_date.strftime('%Y-%m-%d') if 'payment_date' in activity else activity.start_date.strftime('%Y-%m-%d') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-600">No recent activities to display.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

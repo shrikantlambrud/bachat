@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Edit Member{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[calc(100vh-160px)] bg-gray-50">
+    <div class="bg-white shadow-lg rounded-xl w-full max-w-lg p-8">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Edit Member: {{ member.name }}</h2>
+        <form method="POST" action="{{ url_for('edit_member', member_id=member.id) }}">
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 text-sm font-semibold mb-2">Full Name:</label>
+                <input type="text" id="name" name="name" value="{{ member.name }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 text-sm font-semibold mb-2">Username:</label>
+                <input type="text" id="username" name="username" value="{{ member.username }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Email:</label>
+                <input type="email" id="email" name="email" value="{{ member.email }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-4">
+                <label for="contact_number" class="block text-gray-700 text-sm font-semibold mb-2">Contact Number:</label>
+                <input type="text" id="contact_number" name="contact_number" value="{{ member.contact_number }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-4">
+                <label for="pan_number" class="block text-gray-700 text-sm font-semibold mb-2">PAN Number:</label>
+                <input type="text" id="pan_number" name="pan_number" value="{{ member.pan_number }}" maxlength="10"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-6">
+                <label for="aadhar_number" class="block text-gray-700 text-sm font-semibold mb-2">Aadhar Number:</label>
+                <input type="text" id="aadhar_number" name="aadhar_number" value="{{ member.aadhar_number }}"
+                    maxlength="12"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">New Password (leave blank to keep current):</label>
+                <input type="password" id="password" name="password"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="mb-6">
+                <label for="role" class="block text-gray-700 text-sm font-semibold mb-2">Role:</label>
+                <select id="role" name="role"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+                    <option value="member" {% if member.role == 'member' %}selected{% endif %}>Member</option>
+                    <option value="secretary" {% if member.role == 'secretary' %}selected{% endif %}>Secretary</option>
+                    <option value="treasurer" {% if member.role == 'treasurer' %}selected{% endif %}>Treasurer</option>
+                    <option value="president" {% if member.role == 'president' %}selected{% endif %}>President</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-center">
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full transition duration-200 shadow">
+                    Update Member
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

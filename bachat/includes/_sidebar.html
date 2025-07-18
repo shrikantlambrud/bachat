@@ -1,0 +1,35 @@
+<aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+
+        {# Conditional navigation based on roles #}
+        {% if 'member' in roles or 'treasurer' in roles or 'admin' in roles %}
+        <li><a href="{{ url_for('submit_contribution') }}">Submit Contribution</a></li>
+        {% endif %}
+
+        {% if 'admin' in roles or 'president' in roles or 'secretary' in roles %}
+        <li><a href="{{ url_for('members') }}">Members</a></li>
+        {% endif %}
+
+        {% if 'admin' in roles or 'president' in roles or 'treasurer' in roles or 'secretary' in roles %}
+        {# This can be expanded to a list of contributions, for now, dashboard covers it #}
+        <li><a href="{{ url_for('contributions_list') }}">View Contributions</a></li>
+        {% endif %}
+
+        {% if 'admin' in roles or 'president' in roles or 'treasurer' in roles or 'member' in roles %}
+        <li><a href="{{ url_for('loans') }}">Loans</a></li>
+        {% endif %}
+
+        {% if 'admin' in roles or 'president' in roles or 'treasurer' in roles or 'secretary' in roles %}
+        <li><a href="{{ url_for('reports') }}">Reports</a></li>
+        {% endif %}
+
+        {# Add more links for specific actions based on roles #}
+        {% if 'admin' in roles or 'president' in roles %}
+        <li><a href="#">Admin Panel</a></li>
+        {% endif %}
+
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</aside>

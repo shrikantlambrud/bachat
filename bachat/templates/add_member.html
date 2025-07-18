@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Add Member{% endblock %}
+{% block content %}
+<div class="flex items-center justify-center min-h-[calc(100vh-160px)] bg-gray-100 px-4 py-10">
+    <div class="card w-full max-w-lg bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-8">➕ Add New Member</h2>
+        <form method="POST" action="{{ url_for('add_member') }}" class="space-y-5">
+            {% set fields = [
+                ('Full Name', 'name', 'text'),
+                ('Username', 'username', 'text'),
+                ('Email', 'email', 'email'),
+                ('Contact Number', 'contact_number', 'text'),
+                ('PAN Number', 'pan_number', 'text'),
+                ('Aadhar Number', 'aadhar_number', 'text'),
+                ('Password', 'password', 'password')
+            ] %}
+
+            {% for label, id, type in fields %}
+            <div>
+                <label for="{{ id }}" class="block text-gray-700 font-semibold mb-1">{{ label }}:</label>
+                <input type="{{ type }}" id="{{ id }}" name="{{ id }}"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       required
+                       {% if id == "pan_number" %}maxlength="10"{% elif id == "aadhar_number" %}maxlength="12"{% endif %}>
+            </div>
+            {% endfor %}
+
+            <div>
+                <label for="role" class="block text-gray-700 font-semibold mb-1">Role:</label>
+                <select id="role" name="role" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="member">👤 Member</option>
+                    <option value="secretary">📝 Secretary</option>
+                    <option value="treasurer">💰 Treasurer</option>
+                    <option value="president">👑 President</option>
+                </select>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
+                ✅ Add Member
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

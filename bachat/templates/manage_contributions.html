@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Manage Contributions{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">Manage Contributions</h1>
+
+    <!-- Pending Contributions -->
+    <div class="mb-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pending Contributions for Approval</h2>
+        {% if pending_contributions %}
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        {% for header in ['Member', 'Month/Year', 'Amount (₹)', 'Fine (₹)', 'Member UTR', 'Actions'] %}
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            {{ header }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contribution in pending_contributions %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            <span class="text-gray-900">{{ contribution.member_name }}</span>
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            {{ datetime.strptime(contribution.month|string, '%m').strftime('%B') }} {{ contribution.year }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            ₹{{ "%.2f"|format(contribution.amount) }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            ₹{{ "%.2f"|format(contribution.fine_amount) }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm font-mono text-blue-700">
+                            {{ contribution.utr_number }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            <form method="POST" action="{{ url_for('approve_contribution', contribution_id=contribution.id) }}">
+                                <input type="text" name="president_utr_number" placeholder="Enter your UTR to approve"
+                                    class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none mb-2" required>
+                                <button type="submit"
+                                    class="w-full px-4 py-2 text-white font-bold rounded bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:from-green-500 hover:to-green-700 transition-all">
+                                    ✅ Approve
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-600 text-center mt-4">No pending contributions for approval.</p>
+        {% endif %}
+    </div>
+
+    <!-- Approved Contributions -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Approved Contributions This Month</h2>
+        {% if approved_contributions_this_month %}
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        {% for header in ['Member', 'Month/Year', 'Amount (₹)', 'Fine (₹)', 'Member UTR', 'Approver', 'Approver UTR', 'Approved Date'] %}
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            {{ header }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contribution in approved_contributions_this_month %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            {{ contribution.member_name }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            {{ datetime.strptime(contribution.month|string, '%m').strftime('%B') }} {{ contribution.year }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            ₹{{ "%.2f"|format(contribution.amount) }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            ₹{{ "%.2f"|format(contribution.fine_amount) }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm font-mono">
+                            {{ contribution.utr_number or 'N/A' }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            {{ contribution.approver_name or 'N/A' }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm font-mono">
+                            {{ contribution.president_utr_number if contribution.president_utr_number != 'REJECTED' else 'N/A' }}
+                        </td>
+                        <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                            {{ contribution.payment_date.strftime('%Y-%m-%d %H:%M') if contribution.payment_date else 'N/A' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-600 text-center mt-4">No approved contributions for this month.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

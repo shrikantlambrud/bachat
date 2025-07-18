@@ -1,0 +1,130 @@
+
+{% extends "base.html" %}
+{% block title %}My Contributions{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">My Contributions</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Top-Left: Make a New Contribution Form (now wider) -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6 order-1">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Submit New Contribution</h2>
+            <form method="POST" action="{{ url_for('contributions') }}">
+                <!-- Hidden input for the total amount to be submitted -->
+                <input type="hidden" name="amount" value="{{ '%.2f'|format(total_amount_to_pay) }}">
+
+                <div class="mb-4">
+                    <label for="display_total_amount" class="block text-gray-700 text-sm font-bold mb-2">Total Amount Due (₹):</label>
+                    <input type="text" id="display_total_amount"
+                           class="input-field w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+                           value="₹{{ '%.2f'|format(total_amount_to_pay) }}" disabled>
+                    <p class="text-gray-500 text-xs italic mt-2">
+                        This is the total calculated amount including your monthly contribution, any applicable fine, and loan interest.
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="utr_number" class="block text-gray-700 text-sm font-bold mb-2">Your UTR Number:</label>
+                    <input
+                        type="text"
+                        id="utr_number"
+                        name="utr_number"
+                        class="input-field w-full px-3 py-2 border border-gray-300 rounded-md"
+                        required
+                        placeholder="Enter your UTR number"
+                        pattern="\d{12}"
+                        minlength="12"
+                        maxlength="12"
+                        title="Please enter a 12-digit numeric UTR number">
+                    <p class="text-xs text-gray-500 mt-1">Please enter the UPI UTR (Unique Transaction Reference) number for your payment.</p>
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                    Submit Contribution for Approval
+                </button>
+            </form>
+
+            {% if pending_contribution %}
+            <p class="text-yellow-600 text-sm mt-4 text-center">You have a pending contribution for {{ datetime.strptime(pending_contribution.month|string, '%m').strftime('%B') }} {{ pending_contribution.year }}. It is awaiting President/Secretary approval.</p>
+            {% endif %}
+        </div>
+
+        <!-- Top-Right: Payment Summary Card -->
+        <div class="lg:col-span-1 bg-white rounded-lg shadow-lg p-6 order-2">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Monthly Payment Summary</h2>
+            <div class="space-y-3 text-gray-700">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold">Monthly Contribution:</span>
+                    <span class="text-lg">₹{{ '%.2f'|format(default_contribution_amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold">Fine (after {{ payment_end_day }}th):</span>
+                    <span class="text-lg {% if current_fine_amount > 0 %}text-red-600{% else %}text-gray-700{% endif %}">₹{{ '%.2f'|format(current_fine_amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold">Loan Interest Due:</span>
+                    <span class="text-lg {% if total_monthly_loan_interest_due > 0 %}text-red-600{% else %}text-gray-700{% endif %}">₹{{ '%.2f'|format(total_monthly_loan_interest_due) }}</span>
+                </div>
+                <hr class="border-gray-300 my-2">
+                <div class="flex justify-between items-center font-bold text-xl">
+                    <span>Total Amount Due:</span>
+                    <span>₹{{ '%.2f'|format(total_amount_to_pay) }}</span>
+                </div>
+            </div>
+            <p class="text-gray-500 text-xs italic mt-4 text-center">
+                Recommended payment period: {{ payment_start_day }}st to {{ payment_end_day }}th of each month.
+            </p>
+        </div>
+
+        <!-- Bottom: Contribution History (now full width) -->
+        <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 order-3">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Contribution History</h2>
+            {% if contributions_history %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
+                            <th class="px-4 py-3 border">Month</th>
+                            <th class="px-4 py-3 border">Year</th>
+                            <th class="px-4 py-3 border">Amount (₹)</th>
+                            <th class="px-4 py-3 border">Fine (₹)</th>
+                            <th class="px-4 py-3 border">Your UTR</th>
+                            <th class="px-4 py-3 border">Payment Date</th>
+                            <th class="px-4 py-3 border">Status</th>
+                            <th class="px-4 py-3 border">Approver Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contribution in contributions_history %}
+                        <tr class="hover:bg-gray-50 text-sm text-gray-800">
+                            <td class="px-4 py-2 border">{{ datetime.strptime(contribution.month|string, '%m').strftime('%B') }}</td>
+                            <td class="px-4 py-2 border">{{ contribution.year }}</td>
+                            <td class="px-4 py-2 border">₹{{ "%.2f"|format(contribution.amount) }}</td>
+                            <td class="px-4 py-2 border">₹{{ "%.2f"|format(contribution.fine_amount) }}</td>
+                            <td class="px-4 py-2 border font-mono text-blue-700">{{ contribution.utr_number if contribution.utr_number else 'N/A' }}</td>
+                            <td class="px-4 py-2 border">
+                                {% if contribution.payment_date %}{{ contribution.payment_date.strftime('%Y-%m-%d %H:%M') }}{% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-4 py-2 border">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium
+                                    {% if contribution.is_paid %}bg-green-200 text-green-800
+                                    {% else %}bg-yellow-200 text-yellow-800
+                                    {% endif %}">
+                                    {{ "Paid" if contribution.is_paid else "Pending Approval" }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 border">{{ contribution.approver_name or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-600 text-center">No contribution history found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
